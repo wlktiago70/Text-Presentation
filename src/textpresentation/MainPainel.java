@@ -50,11 +50,14 @@ public class MainPainel extends JPanel{
     private JButton removePg = new JButton("Remove");
     private JButton sendPg = new JButton("Send");
     private JButton addPg = new JButton("Add");
+    private JButton colorChooser = new JButton("Color chooser");
     private JFrame presentation = new JFrame("Presentation");
     private JEditorPane editorPane = new JEditorPane();
     private JSlider fontSize = new JSlider(JSlider.VERTICAL,10,200,80);
     private JPanel contentEditorPane = new JPanel(new BorderLayout());
     private Label status = new Label();
+    private Label margin = new Label("");
+
     public MainPainel(){
         super(new BorderLayout());
         setKeyStrokesAndActions();
@@ -70,7 +73,7 @@ public class MainPainel extends JPanel{
         fontSize.addChangeListener(new fontChangeAction());
         content.setBorder(new EmptyBorder(10,10,10,10));
         content.setWrapStyleWord(true);
-        contentEditorPane.add(new Label(""),BorderLayout.NORTH);
+        contentEditorPane.add(colorChooser,BorderLayout.NORTH);
         contentEditorPane.add(status,BorderLayout.SOUTH);
         contentEditorPane.add(new Label(""),BorderLayout.EAST);
         contentEditorPane.add(new Label(""),BorderLayout.WEST);
@@ -80,6 +83,7 @@ public class MainPainel extends JPanel{
         this.add(sidePanel,BorderLayout.EAST);
         this.add(fontSize,BorderLayout.WEST);
         this.add(contentEditorPane,BorderLayout.CENTER);
+        colorChooser.addActionListener(new showColorChooser(this));
         showPrev.addActionListener(new showPreviousAction());
         showNext.addActionListener(new showNextAction());
         removePg.addActionListener(new removeAction());
@@ -94,11 +98,9 @@ public class MainPainel extends JPanel{
     private void preparePresentationWindow(){
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         int centerX = d.width / 2, centerY = d.height / 2, x = 900, y = 600;
-        Label margin = new Label("");
         margin.setBackground(Color.BLUE);
         presentation.setBounds(centerX - x / 2, centerY - y / 2, x, y);
         presentation.setLayout(new BorderLayout());
-        presentation.setBackground(Color.BLUE);
         presentation.add(editorPane,BorderLayout.CENTER);
         presentation.add(margin,BorderLayout.NORTH);
         presentation.add(margin,BorderLayout.SOUTH);
@@ -113,12 +115,20 @@ public class MainPainel extends JPanel{
         editorPane.setFont(new Font("Times New Roman",Font.PLAIN,150));
         editorPane.setContentType("text/html;charset=UTF-8");
     }   
+
+    public Label getMargin() {
+        return margin;
+    }
+
+    public JEditorPane getEditorPane() {
+        return editorPane;
+    }
     
     private String formatText(String str){
         String htmlText =   "<html>\n" +
                             "<style>\n" +
                             "body {\n" +
-                            "    color: yellow;\n" +
+                            "    color: #"+Integer.toHexString(editorPane.getForeground().getRGB()).substring(2)+";\n" +
                             "    font-size: " + fontSize.getValue() + "px;\n" +
                             "    font-weight: normal;\n" +
                             "}\n" +
@@ -200,6 +210,17 @@ public class MainPainel extends JPanel{
         updateStatus();
     }
     
+    private class showColorChooser extends AbstractAction implements ActionListener{
+        private MainPainel mainParent;
+        public showColorChooser(MainPainel parent){
+            mainParent = parent;
+        }
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            ColorChooser.createAndShowGUI(mainParent);
+        }
+    
+    }
     private class showPreviousAction extends AbstractAction implements ActionListener{
 
         @Override
