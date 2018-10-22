@@ -17,6 +17,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.AbstractAction;
@@ -95,20 +97,29 @@ public class MainPainel extends JPanel{
         preparePresentationWindow();
     }
     
-    private void preparePresentationWindow(){
-        Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-        int centerX = d.width / 2, centerY = d.height / 2, x = 900, y = 600;
-        margin.setBackground(Color.BLUE);
-        presentation.setBounds(centerX - x / 2, centerY - y / 2, x, y);
+    private void addComponentsToFrame(JFrame presentation){
         presentation.setLayout(new BorderLayout());
         presentation.add(editorPane,BorderLayout.CENTER);
         presentation.add(margin,BorderLayout.NORTH);
         presentation.add(margin,BorderLayout.SOUTH);
         presentation.add(margin,BorderLayout.EAST);
         presentation.add(margin,BorderLayout.WEST);
-        presentation.setVisible(true);
+        presentation.addWindowStateListener(new myWindowStateListener(presentation));
         presentation.setResizable(true);
         presentation.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+    
+    private void prepareInitialPresentationWindow(JFrame frame){
+        Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+        int centerX = d.width / 2, centerY = d.height / 2, x = 900, y = 600;
+        margin.setBackground(Color.BLUE);
+        addComponentsToFrame(frame);
+        frame.setBounds(centerX - x / 2, centerY - y / 2, x, y);
+        frame.setVisible(true);
+    }
+    
+    private void preparePresentationWindow(){
+        prepareInitialPresentationWindow(presentation);
         editorPane.setEditable(false);
         editorPane.setBackground(Color.BLUE);
         editorPane.setForeground(Color.YELLOW);
@@ -209,7 +220,32 @@ public class MainPainel extends JPanel{
         showPos = currPos;
         updateStatus();
     }
-    
+  
+    private class myWindowStateListener implements WindowStateListener{
+        private JFrame source;
+        public myWindowStateListener(JFrame source){
+            this.source = source;
+        }
+        @Override
+        public void windowStateChanged(WindowEvent e) {
+            // minimized
+            if ((e.getNewState() & JFrame.ICONIFIED) == JFrame.ICONIFIED){
+                System.out.println("minimized");
+            }
+            // maximized
+            else if ((e.getNewState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH){
+                System.out.println("maximized");
+                source.dispose();
+                source = new JFrame(source.getTitle());
+                addComponentsToFrame(source);
+                source.setUndecorated(true);
+                source.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                source.setVisible(true);
+            }
+        }
+        
+    }
+
     private class showColorChooser extends AbstractAction implements ActionListener{
         private MainPainel mainParent;
         public showColorChooser(MainPainel parent){
@@ -331,6 +367,19 @@ public class MainPainel extends JPanel{
         }
         
     }
+    private class escAction extends AbstractAction implements ActionListener{
+        private JFrame source;
+        public escAction(JFrame source){
+            this.source = source;
+        }
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            source.dispose();
+            source = new JFrame(source.getTitle());
+            prepareInitialPresentationWindow(source);
+        }
+    
+    }
     private void setKeyStrokesAndActions(){
         content.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,InputEvent.CTRL_DOWN_MASK), "sendAction");
         content.getActionMap().put("sendAction", new sendAction());
@@ -361,5 +410,10 @@ public class MainPainel extends JPanel{
         content.getActionMap().put("subscripted", new typingAction(typingAction.SUBSCRIPTED));
         content.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_6,InputEvent.CTRL_DOWN_MASK), "superscripted");
         content.getActionMap().put("superscripted", new typingAction(typingAction.SUPERSCRIPTED));
+
+        content.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0), "restorePresentation");
+        content.getActionMap().put("restorePresentation", new escAction(presentation));
+        this.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0), "restorePresentation");
+        this.getActionMap().put("restorePresentation", new escAction(presentation));
     }
 }
