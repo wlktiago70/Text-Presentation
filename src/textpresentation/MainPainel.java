@@ -9,6 +9,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.Label;
 import java.awt.Toolkit;
@@ -16,7 +18,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
 import java.util.ArrayList;
@@ -41,24 +42,27 @@ import javax.swing.event.ChangeListener;
 public class MainPainel extends JPanel{
     private int currPos = -1;
     private int showPos = -1;
-    private List<String> pages = new ArrayList<>();
-    private JTextArea content = new JTextArea();
-    private JScrollPane contentScrollPane = new JScrollPane(content);
-    private JPanel sidePanel = new JPanel(new GridLayout(5,1));
-    private JButton showPrev = new JButton("Show previous");
-    private JButton showNext = new JButton("Show next");
-    private JButton getPrev = new JButton("<<");
-    private JButton getNext = new JButton(">>");
-    private JButton removePg = new JButton("Remove");
-    private JButton sendPg = new JButton("Send");
-    private JButton addPg = new JButton("Add");
-    private JButton colorChooser = new JButton("Color chooser");
+    private final List<String> pages = new ArrayList<>();
+    private final JTextArea content = new JTextArea();
+    private final JScrollPane contentScrollPane = new JScrollPane(content);
+    private final JPanel sidePanel = new JPanel(new GridLayout(5,1));
+    private final JPanel topPanel = new JPanel(new GridLayout(1,7));
+    private final JButton showPrev = new JButton("Show previous");
+    private final JButton showNext = new JButton("Show next");
+    private final JButton getPrev = new JButton("<<");
+    private final JButton getNext = new JButton(">>");
+    private final JButton removePg = new JButton("Remove");
+    private final JButton sendPg = new JButton("Send");
+    private final JButton addPg = new JButton("Add");
+    private final JButton topButtons[] = new JButton[7];
     private JFrame presentation = new JFrame("Presentation");
-    private JEditorPane editorPane = new JEditorPane();
-    private JSlider fontSize = new JSlider(JSlider.VERTICAL,10,200,80);
-    private JPanel contentEditorPane = new JPanel(new BorderLayout());
-    private Label status = new Label();
-    private Label margin = new Label("");
+    private final JEditorPane editorPane = new JEditorPane();
+    private final JSlider fontSize = new JSlider(JSlider.VERTICAL,10,200,80);
+    private final JPanel contentEditorPane = new JPanel(new BorderLayout());
+    private final Label status = new Label();
+    private final Label margin = new Label("");
+    private GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+    private GraphicsDevice devices[] = env.getScreenDevices();
 
     public MainPainel(){
         super(new BorderLayout());
@@ -68,6 +72,21 @@ public class MainPainel extends JPanel{
         sidePanel.add(getPrev);
         sidePanel.add(addPg);
         sidePanel.add(sendPg);
+        topButtons[0] = new JButton("B");
+        topButtons[1] = new JButton("I");
+        topButtons[2] = new JButton("U");
+        topButtons[3] = new JButton("S");
+        topButtons[4] = new JButton("▼");
+        topButtons[5] = new JButton("▲");
+        topButtons[6] = new JButton("Color");
+        topButtons[0].addActionListener(new typingAction(typingAction.BOLD));
+        topButtons[1].addActionListener(new typingAction(typingAction.ITALIC));
+        topButtons[2].addActionListener(new typingAction(typingAction.INSERTED));
+        topButtons[3].addActionListener(new typingAction(typingAction.DELETED));
+        topButtons[4].addActionListener(new typingAction(typingAction.SUBSCRIPTED));
+        topButtons[5].addActionListener(new typingAction(typingAction.SUPERSCRIPTED));
+        topButtons[6].addActionListener(new showColorChooser(this));
+        for(JButton b: topButtons) topPanel.add(b);
         fontSize.setMajorTickSpacing(10);
         fontSize.setMinorTickSpacing(5);
         fontSize.setPaintTicks(true);
@@ -75,7 +94,7 @@ public class MainPainel extends JPanel{
         fontSize.addChangeListener(new fontChangeAction());
         content.setBorder(new EmptyBorder(10,10,10,10));
         content.setWrapStyleWord(true);
-        contentEditorPane.add(colorChooser,BorderLayout.NORTH);
+        contentEditorPane.add(topPanel,BorderLayout.NORTH);
         contentEditorPane.add(status,BorderLayout.SOUTH);
         contentEditorPane.add(new Label(""),BorderLayout.EAST);
         contentEditorPane.add(new Label(""),BorderLayout.WEST);
@@ -85,7 +104,6 @@ public class MainPainel extends JPanel{
         this.add(sidePanel,BorderLayout.EAST);
         this.add(fontSize,BorderLayout.WEST);
         this.add(contentEditorPane,BorderLayout.CENTER);
-        colorChooser.addActionListener(new showColorChooser(this));
         showPrev.addActionListener(new showPreviousAction());
         showNext.addActionListener(new showNextAction());
         removePg.addActionListener(new removeAction());
@@ -228,20 +246,21 @@ public class MainPainel extends JPanel{
         }
         @Override
         public void windowStateChanged(WindowEvent e) {
-            // minimized
-            if ((e.getNewState() & JFrame.ICONIFIED) == JFrame.ICONIFIED){
-                System.out.println("minimized");
-            }
-            // maximized
-            else if ((e.getNewState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH){
-                System.out.println("maximized");
-                source.dispose();
-                source = new JFrame(source.getTitle());
-                addComponentsToFrame(source);
-                source.setUndecorated(true);
-                source.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                source.setVisible(true);
-            }
+//            // minimized
+//            if ((e.getNewState() & JFrame.ICONIFIED) == JFrame.ICONIFIED){
+//                System.out.println("minimized");
+//            }
+//            // maximized
+//            else if ((e.getNewState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH){
+//                System.out.println("maximized");
+//                source.dispose();
+//                source = new JFrame(source.getTitle());
+//                addComponentsToFrame(source);
+//                source.setUndecorated(true);
+//                source.setVisible(true);
+//                //device = source.getGraphicsConfiguration().getDevice();
+//                devices[devices.length-1].setFullScreenWindow(source);
+//            }
         }
         
     }
@@ -374,9 +393,10 @@ public class MainPainel extends JPanel{
         }
         @Override
         public void actionPerformed(ActionEvent ae) {
-            source.dispose();
-            source = new JFrame(source.getTitle());
-            prepareInitialPresentationWindow(source);
+//            source.dispose();
+//            devices[devices.length-1].getFullScreenWindow().setVisible(false);
+//            source = new JFrame(source.getTitle());
+//            prepareInitialPresentationWindow(source);
         }
     
     }
@@ -410,6 +430,8 @@ public class MainPainel extends JPanel{
         content.getActionMap().put("subscripted", new typingAction(typingAction.SUBSCRIPTED));
         content.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_6,InputEvent.CTRL_DOWN_MASK), "superscripted");
         content.getActionMap().put("superscripted", new typingAction(typingAction.SUPERSCRIPTED));
+        content.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_7,InputEvent.CTRL_DOWN_MASK), "colorChooser");
+        content.getActionMap().put("colorChooser", new showColorChooser(this));
 
         content.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0), "restorePresentation");
         content.getActionMap().put("restorePresentation", new escAction(presentation));
